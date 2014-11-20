@@ -13,8 +13,8 @@ CVector2::CVector2(float _x, float _y) {
 
 // Vector between two points
 CVector2::CVector2(CVector2 a, CVector2 b) {
-  x = b.x - a.x;
-  y = b.y - a.y;
+  x = a.x - b.x;
+  y = a.y - b.y;
 }
 
 sf::Vector2f CVector2::toSF() {

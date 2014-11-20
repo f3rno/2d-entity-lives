@@ -11,7 +11,7 @@ SNeuralLayer* nn_layer_create(uint n_inputs, uint n_neurons) {
   layer->neurons = new SNeuron*[n_neurons];
 
   for (uint i = 0; i < n_neurons; i++) {
-    layer->neurons[i] = nn_neuron_create(n_inputs, 0);
+    layer->neurons[i] = nn_neuron_create(n_inputs, 1);
   }
 
   return layer;

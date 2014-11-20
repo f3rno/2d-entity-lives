@@ -13,13 +13,12 @@ int main() {
   random_device rd;
   srand(rd());
 
-  sf::RenderWindow window(sf::VideoMode(400, 400), "NNetworks");
+  sf::RenderWindow window(sf::VideoMode(1000, 1000), "NNetworks");
   window.setVerticalSyncEnabled(false);
   window.setFramerateLimit(0);
   bool graphics_enabled = true;
 
-  CWorld* world = new CWorld(400, 400, 50, 60);
-  // world->setBreeding(false);
+  CWorld* world = new CWorld(1000, 1000, 50, 200);
 
   int loops = 0;
   sf::Clock loopClock;
@@ -29,13 +28,21 @@ int main() {
     while (window.pollEvent(event)) {
       if (event.type == sf::Event::Closed)
         window.close();
-      if (event.type == sf::Event::KeyReleased && event.key.code == sf::Keyboard::G) {
-        graphics_enabled = !graphics_enabled;
+      if (event.type == sf::Event::KeyReleased) {
+        if (event.key.code == sf::Keyboard::G) {
+          graphics_enabled = !graphics_enabled;
 
-        if (!graphics_enabled) {
-          window.clear();
+          if (!graphics_enabled) {
+            window.clear();
+          }
+        } else if (event.key.code == sf::Keyboard::S) {
+          window.setFramerateLimit(30);
+        } else if (event.key.code == sf::Keyboard::F) {
+          window.setFramerateLimit(60);
+        } else if (event.key.code == sf::Keyboard::U) {
+          window.setFramerateLimit(0);
         }
-       }
+      }
     }
 
     world->step();

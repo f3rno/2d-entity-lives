@@ -13,10 +13,7 @@ class CVector2;
 class CWorld {
 
 public:
-  static uint FATIGUE_DELAY_LOOPS;
-  static uint FERTILITY_START;
-  static uint FERTILITY_END;
-  static float OFFSPRING_CHANCE;
+  static uint GENERATION_DELAY_LOOPS;
   static float MUTATION_RATE;
   static float CROSSOVER_RATE;
 
@@ -27,16 +24,18 @@ public:
   void draw(sf::RenderWindow* window);
   void consumeFood(CFood* food_item);
   void requestOffspring(CAnt* ant);
-  void setBreeding(bool _breeding);
 
   uint getWidth();
   uint getHeight();
 
+  uint getGenerationFitness();
   sf::Vector2f getRandomPosition();
   CFood* getNearestFood(sf::Vector2f origin);
   CFood* getNearestFood(CVector2 origin);
   sf::Font* getFont();
-  bool breedingEnabled();
+
+  std::vector<CAnt *> ants;
+  std::vector<CFood *> food;
 
 private:
   uint width, height;
@@ -44,27 +43,20 @@ private:
   uint start_pop;
 
   sf::Font arial_font;
-  sf::Text fatigues_text;
+  sf::Text generation_text;
   std::ostringstream ss;
-  uint fatigues;
-  bool breeding;
+  uint next_generation_delay;
+  uint generation;
 
-  std::vector<CAnt *> ants;
-  std::vector<CFood *> food;
-
-  void resetFatigueDelay();
+  CAnt* spawnOffspring(CAnt* parent_a, CAnt* parent_b, uint gen);
+  void resetGenerationDelay();
   void wrapScreenEdges();
   void grimReaper(CAnt* ant);
   void runGrimReaper(std::vector<CAnt *> targets);
-  void produceOffspring(); // Uses parents in the queue
-  void clearOffspringQueue();
-  void seedPopulation(uint gen);
-  void seedPopulation(SNeuralNetworkData* genome, uint gen);
+  void advanceGeneration(uint gen);
   void getFitnessRange(uint* range);
   void simulateAnts();
-  void updateFatigueDelay();
-
-  CAnt* offspringQueue[2];
+  void manageGeneration();
 };
 
 #endif
