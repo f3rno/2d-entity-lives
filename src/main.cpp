@@ -13,12 +13,12 @@ int main() {
   random_device rd;
   srand(rd());
 
-  sf::RenderWindow window(sf::VideoMode(1000, 1000), "NNetworks");
+  sf::RenderWindow window(sf::VideoMode(800, 800), "NNetworks");
   window.setVerticalSyncEnabled(false);
   window.setFramerateLimit(0);
   bool graphics_enabled = true;
 
-  CWorld* world = new CWorld(1000, 1000, 50, 200);
+  CWorld* world = new CWorld(800, 800, 10, 30);
 
   int loops = 0;
   sf::Clock loopClock;

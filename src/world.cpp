@@ -8,7 +8,7 @@
 #include <iostream>
 #include <assert.h>
 #include <algorithm>
-#include <boost\thread.hpp>
+#include <boost/thread.hpp>
 
 uint CWorld::GENERATION_DELAY_LOOPS = 10000;
 float CWorld::MUTATION_RATE = 0.02f;

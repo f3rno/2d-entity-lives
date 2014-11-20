@@ -3,7 +3,7 @@
 
 #include "types.h"
 #include <vector>
-#include <SFML\Graphics.hpp>
+#include <SFML/Graphics.hpp>
 #include <sstream>
 
 struct SNeuralNetworkData;

@@ -3,7 +3,7 @@
 
 #include "types.h"
 #include "entity.h"
-#include <SFML\Graphics.hpp>
+#include <SFML/Graphics.hpp>
 #include <vector>
 #include <sstream>
 
