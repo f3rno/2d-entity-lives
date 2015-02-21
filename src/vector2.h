@@ -1,7 +1,6 @@
 #ifndef VECTOR_H
 #define VECTOR_H
 
-#include "types.h"
 #include <SFML/System.hpp>
 
 // We have to define our own vector class since SFML doesn't provide much...

@@ -3,7 +3,7 @@
 #include <cmath>
 
 // Creat a neuron with n_inputs
-SNeuron* nn_neuron_create(uint n_inputs, double bias) {
+SNeuron* nn_neuron_create(uint16_t n_inputs, double bias) {
   SNeuron* neuron = new SNeuron();
 
   neuron->n_weights = n_inputs + 1;
@@ -21,7 +21,7 @@ void nn_neuron_delete(SNeuron* neuron) {
 }
 
 void nn_neuron_randomizeWeights(SNeuron* neuron) {
-  for (uint i = 0; i < neuron->n_weights; i++) {
+  for (uint16_t i = 0; i < neuron->n_weights; i++) {
     neuron->weights[i] = nn_util_genrandom();
   }
 }
@@ -30,7 +30,7 @@ void nn_neuron_randomizeWeights(SNeuron* neuron) {
 double nn_neuron_process(SNeuron* neuron, double* inputs) {
   double output = 0;
 
-  for (uint i = 0; i < neuron->n_weights - 2; i++) {
+  for (uint16_t i = 0; i < neuron->n_weights - 2; i++) {
     output += neuron->weights[i] * inputs[i];
   }
   

@@ -1,7 +1,7 @@
 #ifndef WORLD_H
 #define WORLD_H
 
-#include "types.h"
+#include <stdint.h>
 #include <vector>
 #include <SFML/Graphics.hpp>
 #include <sstream>
@@ -13,11 +13,11 @@ class CVector2;
 class CWorld {
 
 public:
-  static uint GENERATION_DELAY_LOOPS;
+  static uint16_t GENERATION_DELAY_LOOPS;
   static float MUTATION_RATE;
   static float CROSSOVER_RATE;
 
-  CWorld(uint _width, uint _height, uint _start_pop, uint start_food);
+  CWorld(uint16_t _width, uint16_t _height, uint16_t _start_pop, uint16_t start_food, bool graphics);
   ~CWorld();
 
   void step();
@@ -25,10 +25,10 @@ public:
   void consumeFood(CFood* food_item);
   void requestOffspring(CAnt* ant);
 
-  uint getWidth();
-  uint getHeight();
+  uint16_t getWidth();
+  uint16_t getHeight();
 
-  uint getGenerationFitness();
+  uint16_t getGenerationFitness();
   sf::Vector2f getRandomPosition();
   CFood* getNearestFood(sf::Vector2f origin);
   CFood* getNearestFood(CVector2 origin);
@@ -38,23 +38,25 @@ public:
   std::vector<CFood *> food;
 
 private:
-  uint width, height;
+  bool has_graphics;
+
+  uint16_t width, height;
   int fatigue_countdown;
-  uint start_pop;
+  uint16_t start_pop;
 
   sf::Font arial_font;
   sf::Text generation_text;
   std::ostringstream ss;
-  uint next_generation_delay;
-  uint generation;
+  uint16_t next_generation_delay;
+  uint16_t generation;
 
-  CAnt* spawnOffspring(CAnt* parent_a, CAnt* parent_b, uint gen);
+  CAnt* spawnOffspring(CAnt* parent_a, CAnt* parent_b, uint16_t gen);
   void resetGenerationDelay();
   void wrapScreenEdges();
   void grimReaper(CAnt* ant);
   void runGrimReaper(std::vector<CAnt *> targets);
-  void advanceGeneration(uint gen);
-  void getFitnessRange(uint* range);
+  void advanceGeneration(uint16_t gen);
+  void getFitnessRange(uint16_t* range);
   void simulateAnts();
   void manageGeneration();
 };

@@ -1,5 +1,5 @@
 #include "ant.h"
-#include "neural_network.h"
+#include "neural/neural_network.h"
 #include <vector>
 #include <cmath>
 #include "vector2.h"
@@ -9,7 +9,7 @@
 
 #define PI 3.1415926f
 
-CAnt::CAnt(CWorld* world, sf::Vector2f start_pos, uint _generation) :
+CAnt::CAnt(CWorld* world, sf::Vector2f start_pos, uint16_t _generation) :
 CEntity(world, new sf::RectangleShape(sf::Vector2f(5, 5)), start_pos) {
 
   generation = _generation;
@@ -23,8 +23,8 @@ CEntity(world, new sf::RectangleShape(sf::Vector2f(5, 5)), start_pos) {
   status_str.setColor(sf::Color::Green);
   status_str.setCharacterSize(11);
 
-  uint* brain_layer_sizes = new uint[3];
-  uint* brain_layer_inputs = new uint[3];
+  uint16_t* brain_layer_sizes = new uint16_t[3];
+  uint16_t* brain_layer_inputs = new uint16_t[3];
 
   brain_layer_sizes[0] = 4;
   brain_layer_inputs[0] = 4; // 4 inputs (fx, fy, x, y)
@@ -43,11 +43,11 @@ CEntity(world, new sf::RectangleShape(sf::Vector2f(5, 5)), start_pos) {
   delete[] brain_layer_inputs;
 }
 
-uint CAnt::getGeneration() {
+uint16_t CAnt::getGeneration() {
   return generation;
 }
 
-uint CAnt::getFitness() {
+uint16_t CAnt::getFitness() {
   return fitness;
 }
 

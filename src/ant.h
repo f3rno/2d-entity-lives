@@ -1,7 +1,7 @@
 #ifndef ANT_H
 #define ANT_H
 
-#include "types.h"
+#include <stdint.h>
 #include "entity.h"
 #include <SFML/Graphics.hpp>
 #include <vector>
@@ -15,14 +15,14 @@ class CFood;
 class CAnt : public CEntity {
 
 public:
-  CAnt(CWorld* world, sf::Vector2f start_pos, uint _generation);
+  CAnt(CWorld* world, sf::Vector2f start_pos, uint16_t _generation);
   ~CAnt();
 
   void step();
   void draw(sf::RenderWindow* window);
 
-  uint getGeneration();
-  uint getFitness();
+  uint16_t getGeneration();
+  uint16_t getFitness();
   void getGenome(SNeuralNetworkData* output);
   void insertGenome(SNeuralNetworkData* input);
 
@@ -34,8 +34,8 @@ private:
 
   std::ostringstream ss;
   sf::Text status_str;
-  uint generation;
-  uint fitness;
+  uint16_t generation;
+  uint16_t fitness;
 };
 
 #endif
