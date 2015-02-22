@@ -6,6 +6,7 @@
 #include "world.h"
 #include "food.h"
 #include <algorithm>
+#include <iostream>
 
 #define PI 3.1415926f
 
@@ -45,10 +46,6 @@ CEntity(world, new sf::RectangleShape(sf::Vector2f(5, 5)), start_pos) {
 
 uint16_t CAnt::getGeneration() {
   return generation;
-}
-
-uint16_t CAnt::getFitness() {
-  return fitness;
 }
 
 // Give the ant a chance to update its state

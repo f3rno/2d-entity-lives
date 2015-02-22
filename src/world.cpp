@@ -4,11 +4,11 @@
 #include "neural/neural_network.h"
 #include "neural/utility.h"
 #include "vector2.h"
+#include "qtree/qtree.h"
 #include <random>
 #include <iostream>
 #include <assert.h>
 #include <algorithm>
-#include <boost/thread.hpp>
 
 uint16_t CWorld::GENERATION_DELAY_LOOPS = 10000;
 float CWorld::MUTATION_RATE = 0.02f;
@@ -18,10 +18,12 @@ CWorld::CWorld(uint16_t _width, uint16_t _height, uint16_t _start_pop, uint16_t 
   height = _height;
   start_pop = _start_pop;
   has_graphics = graphics;
+
+  food_tree = new CQTree(0, 8, width, height, 0, 0);
   resetGenerationDelay();
 
   for (uint16_t i = 0; i < start_food; i++) {
-    food.push_back(new CFood(this, getRandomPosition()));
+    spawnFood();
   }
 
   advanceGeneration(1);
@@ -36,6 +38,16 @@ CWorld::CWorld(uint16_t _width, uint16_t _height, uint16_t _start_pop, uint16_t 
     generation_text.setCharacterSize(16);
     generation_text.setColor(sf::Color::Green);
   }
+}
+
+void CWorld::spawnFood() {
+  sf::Vector2f position = getRandomPosition();
+  uint16_t x = (uint16_t)position.x;
+  uint16_t y = (uint16_t)position.y;
+
+  CFood* new_food = new CFood(this, position);
+  food_tree->insertObject(new_food, x, y);
+  food.push_back(new_food);
 }
 
 void CWorld::advanceGeneration(uint16_t gen) {
@@ -57,33 +69,31 @@ void CWorld::advanceGeneration(uint16_t gen) {
     uint16_t prev_gen_size = ants.size();
     std::vector<CAnt* > new_generation;
 
-    long totalFitness = 0;
-    long minFitness = 0; // We don't pay attention to mentally challenged ants
-    long maxFitness = 0;
+    float totalFitness = 0;
+    float minFitness = 0; // We don't pay attention to mentally challenged ants
+    float maxFitness = 0;
 
     for (uint16_t i = 0; i < ants.size(); i++) {
-      if (ants[i]->getFitness() > maxFitness) {
-        maxFitness = ants[i]->getFitness();
+      if (ants[i]->fitness > maxFitness) {
+        maxFitness = ants[i]->fitness;
       }
 
-      if (ants[i]->getFitness() > 0 && (ants[i]->getFitness() < minFitness || minFitness == 0)) {
-        minFitness = ants[i]->getFitness();
+      if (ants[i]->fitness > 0 && (ants[i]->fitness < minFitness || minFitness == 0)) {
+        minFitness = ants[i]->fitness;
       }
 
-      totalFitness += ants[i]->getFitness();
+      totalFitness += ants[i]->fitness;
     }
 
-    long fitnessCutoff = round((1.0f - (minFitness / maxFitness)) * 0.9f);
-    long ant_fitness_score = 0;
+    float fitnessCutoff = (1.0f - (minFitness / maxFitness)) * 0.9f;
     float fitnessCutoffReduction = 0.9f;
     uint16_t loopCount = 0; // We decrease the cutoff as we run out of options
 
     while (new_generation.size() < prev_gen_size) {
       for (uint16_t i = 0; i < ants.size(); i++) {
-        ant_fitness_score = ants[i]->getFitness() / maxFitness;
 
         // Eugenics FTW
-        if (ant_fitness_score > fitnessCutoff) {
+        if (ants[i]->fitness / maxFitness > fitnessCutoff) {
           if (parents[0] == NULL) {
             parents[0] = ants[i];
           } else if (parents[0] != ants[i] && parents[1] == NULL) {
@@ -104,8 +114,8 @@ void CWorld::advanceGeneration(uint16_t gen) {
 
       loopCount++;
 
-      if (loopCount % 60 == 0) {
-        fitnessCutoff = round(fitnessCutoff * fitnessCutoffReduction);
+      if (loopCount % 10 == 0) {
+        fitnessCutoff -= 1;
       }
     }
 
@@ -121,7 +131,7 @@ uint16_t CWorld::getGenerationFitness() {
   uint16_t total = 0;
 
   for (uint16_t i = 0; i < ants.size(); i++) {
-    total += ants[i]->getFitness();
+    total += ants[i]->fitness;
   }
 
   return total;
@@ -182,30 +192,15 @@ sf::Vector2f CWorld::getRandomPosition() {
 }
 
 CFood* CWorld::getNearestFood(sf::Vector2f origin) {
-  return getNearestFood(CVector2(origin.x, origin.y));
-}
-
-CFood* CWorld::getNearestFood(CVector2 origin) {
-  if (food.size() == 0) { return NULL; }
-
-  CFood* nearest = NULL;
-  float best_distance = -1;
-
-  for (uint16_t i = 0; i < food.size(); i++) {
-    float food_distance = origin.distance(food[i]->getPosition());
-
-    if (best_distance == -1 || food_distance < best_distance) {
-      best_distance = food_distance;
-      nearest = food[i];
-    }
-  }
-
-  return nearest;
+  return (CFood *)food_tree->findNearest((uint16_t) origin.x, (uint16_t) origin.y);
 }
 
 void CWorld::consumeFood(CFood* food_item) {
-  food.erase(std::remove(food.begin(), food.end(), food_item), food.end());
-  food.push_back(new CFood(this, getRandomPosition()));
+
+  CVector2 position = food_item->getPosition();
+  food_tree->removeObject(food_item, (uint16_t) position.x, (uint16_t) position.y);
+
+  spawnFood();
 }
 
 sf::Font* CWorld::getFont() {
@@ -217,7 +212,7 @@ void CWorld::getFitnessRange(uint16_t* range) {
   range[1] = 0;
 
   for (uint16_t i = 0; i < ants.size(); i++) {
-    uint16_t fitness = ants[i]->getFitness();
+    uint16_t fitness = ants[i]->fitness;
 
     if (first_run || fitness < range[0]) {
       range[0] = fitness;
@@ -264,7 +259,7 @@ void CWorld::manageGeneration() {
     
     // Prevent new generation before ants eat
     for (uint16_t i = 0; i < ants.size(); i++) {
-      if (ants[i]->getFitness() > 0) {
+      if (ants[i]->fitness > 0) {
         fit_ants_exist = true;
         break;
       }
@@ -343,4 +338,6 @@ CWorld::~CWorld() {
 
   food.clear();
   ants.clear();
+
+  delete food_tree;
 }

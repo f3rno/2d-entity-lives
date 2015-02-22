@@ -22,7 +22,7 @@ public:
   void draw(sf::RenderWindow* window);
 
   uint16_t getGeneration();
-  uint16_t getFitness();
+  uint16_t fitness;
   void getGenome(SNeuralNetworkData* output);
   void insertGenome(SNeuralNetworkData* input);
 
@@ -35,7 +35,6 @@ private:
   std::ostringstream ss;
   sf::Text status_str;
   uint16_t generation;
-  uint16_t fitness;
 };
 
 #endif

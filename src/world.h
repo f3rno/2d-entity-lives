@@ -10,6 +10,7 @@ struct SNeuralNetworkData;
 class CFood;
 class CAnt;
 class CVector2;
+class CQTree;
 class CWorld {
 
 public:
@@ -31,11 +32,11 @@ public:
   uint16_t getGenerationFitness();
   sf::Vector2f getRandomPosition();
   CFood* getNearestFood(sf::Vector2f origin);
-  CFood* getNearestFood(CVector2 origin);
   sf::Font* getFont();
 
   std::vector<CAnt *> ants;
-  std::vector<CFood *> food;
+  std::vector<CFood* > food;
+  CQTree* food_tree; // Doesn't take ownership of food objects
 
 private:
   bool has_graphics;
@@ -59,6 +60,7 @@ private:
   void getFitnessRange(uint16_t* range);
   void simulateAnts();
   void manageGeneration();
+  void spawnFood();
 };
 
 #endif

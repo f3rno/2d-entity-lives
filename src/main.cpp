@@ -5,6 +5,7 @@
 #include <random>
 #include <vector>
 #include <math.h>
+#include <string.h>
 #include "world.h"
 #include "neural/neural_network.h"
 
