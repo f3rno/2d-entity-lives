@@ -1,31 +1,23 @@
 #include "entity.h"
 #include "vector2.h"
 
-CEntity::CEntity(CWorld* _world, sf::Shape* _body, sf::Vector2f start_pos) {
-  body = _body;
+CEntity::CEntity(CWorld* _world, CVector2 start_pos) {
   world = _world;
-
-  if (body != NULL) {
-    body->setPosition(start_pos);
-  }
+  position = start_pos;
+  rotation = 0;
 }
 
 void CEntity::step() {}
 
-void CEntity::draw(sf::RenderWindow* window) {
-  if (body != NULL) {
-    window->draw(*body);
-  }
-}
-
-sf::Shape* CEntity::getBody() {
-  return body;
-}
-
 CVector2 CEntity::getPosition() {
-  return CVector2(body->getPosition().x, body->getPosition().y);
+  return position;
 }
 
-CEntity::~CEntity() {
-  delete body;
+void CEntity::move(float x, float y) {
+  position.x += x;
+  position.y += y;
+}
+
+void CEntity::rotate(float a) {
+  rotation += a;
 }

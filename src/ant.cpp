@@ -10,19 +10,19 @@
 
 #define PI 3.1415926f
 
-CAnt::CAnt(CWorld* world, sf::Vector2f start_pos, uint16_t _generation) :
-CEntity(world, new sf::RectangleShape(sf::Vector2f(5, 5)), start_pos) {
+CAnt::CAnt(CWorld* world, CVector2 start_pos, uint16_t _generation) :
+CEntity(world, start_pos) {
 
   generation = _generation;
   target_food = NULL;
   fitness = 0;
 
-  body->setFillColor(sf::Color(230, 126, 34));
+  /*body->setFillColor(sf::Color(230, 126, 34));
   body->setOrigin(2.5, 2.5);
 
   status_str.setFont(*world->getFont());
   status_str.setColor(sf::Color::Green);
-  status_str.setCharacterSize(11);
+  status_str.setCharacterSize(11);*/
 
   uint16_t* brain_layer_sizes = new uint16_t[3];
   uint16_t* brain_layer_inputs = new uint16_t[3];
@@ -50,14 +50,13 @@ uint16_t CAnt::getGeneration() {
 
 // Give the ant a chance to update its state
 void CAnt::step() {
-
-  target_food = world->getNearestFood(body->getPosition());
+  target_food = world->getNearestFood(position);
 
   // Only act if there is food in the world, otherwise we die anyway
   if (target_food != NULL) {
 
     // Calculate food vector
-    CVector2 foodV(getPosition(), target_food->getPosition());
+    CVector2 foodV(position, target_food->getPosition());
 
     // If food is close enough, consume it
     if (foodV.length() <= 3.5f) {
@@ -69,7 +68,7 @@ void CAnt::step() {
     } else {
       foodV.normalise();
 
-      float angle = body->getRotation();
+      float angle = rotation;
       float angle_r = angle * (PI / 180.0f);
       float look_x = -1.0f * sin(angle_r);
       float look_y = cos(angle_r);
@@ -85,8 +84,8 @@ void CAnt::step() {
       brain_outputs[0] = (brain_outputs[0] - 0.5f);
       brain_outputs[1] = (brain_outputs[1] - 0.5f) * 4.0f;
 
-      body->rotate(brain_outputs[0] * (180.0f / PI));
-      body->move(brain_outputs[1] * look_x, brain_outputs[1] * look_y);
+      rotate(brain_outputs[0] * (180.0f / PI));
+      move(brain_outputs[1] * look_x, brain_outputs[1] * look_y);
     }
   }
 }
@@ -99,6 +98,7 @@ void CAnt::insertGenome(SNeuralNetworkData* input) {
   nn_network_load(brain, input);
 }
 
+/*
 void CAnt::draw(sf::RenderWindow* window) {
 
   // Draw food target line
@@ -120,7 +120,7 @@ void CAnt::draw(sf::RenderWindow* window) {
   status_str.setString(ss.str());
   status_str.setPosition(sf::Vector2f(body_position.x - 16.0f, body_position.y - 16.0f));
   window->draw(status_str);
-}
+}*/
 
 CAnt::~CAnt() {
   nn_network_delete(brain);

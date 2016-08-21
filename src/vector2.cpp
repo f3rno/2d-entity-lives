@@ -17,10 +17,6 @@ CVector2::CVector2(CVector2 a, CVector2 b) {
   y = a.y - b.y;
 }
 
-sf::Vector2f CVector2::toSF() {
-  return sf::Vector2f(x, y);
-}
-
 CVector2 CVector2::normal() {
   float l = length();
   float nx = x / l;
@@ -42,10 +38,6 @@ float CVector2::length() {
 
 float CVector2::distance(float target_x, float target_y) {
   return sqrtf(powf(target_x - x, 2) + powf(target_y - y, 2));
-}
-
-float CVector2::distance(sf::Vector2f vec) {
-  return distance(vec.x, vec.y);
 }
 
 float CVector2::distance(CVector2 vec) {

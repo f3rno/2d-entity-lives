@@ -3,7 +3,6 @@
 
 #include <stdint.h>
 #include <vector>
-#include <SFML/Graphics.hpp>
 #include <sstream>
 
 struct SNeuralNetworkData;
@@ -18,11 +17,10 @@ public:
   static float MUTATION_RATE;
   static float CROSSOVER_RATE;
 
-  CWorld(uint16_t _width, uint16_t _height, uint16_t _start_pop, uint16_t start_food, bool graphics);
+  CWorld(uint16_t _width, uint16_t _height, uint16_t _start_pop, uint16_t start_food);
   ~CWorld();
 
   void step();
-  void draw(sf::RenderWindow* window);
   void consumeFood(CFood* food_item);
   void requestOffspring(CAnt* ant);
 
@@ -30,24 +28,18 @@ public:
   uint16_t getHeight();
 
   uint16_t getGenerationFitness();
-  sf::Vector2f getRandomPosition();
-  CFood* getNearestFood(sf::Vector2f origin);
-  sf::Font* getFont();
+  CVector2 getRandomPosition();
+  CFood* getNearestFood(CVector2 origin);
 
   std::vector<CAnt *> ants;
   std::vector<CFood* > food;
   CQTree* food_tree; // Doesn't take ownership of food objects
 
 private:
-  bool has_graphics;
-
   uint16_t width, height;
   int fatigue_countdown;
   uint16_t start_pop;
 
-  sf::Font arial_font;
-  sf::Text generation_text;
-  std::ostringstream ss;
   uint16_t next_generation_delay;
   uint16_t generation;
 

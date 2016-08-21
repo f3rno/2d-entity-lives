@@ -3,13 +3,13 @@
 
 #include <stdint.h>
 #include "entity.h"
-#include <SFML/Graphics.hpp>
 
 class CWorld;
+class CVector2;
 class CFood : public CEntity {
 
 public:
-  CFood(CWorld* world, sf::Vector2f start_pos);
+  CFood(CWorld* world, CVector2 start_pos);
 };
 
 #endif

@@ -13,11 +13,10 @@
 uint16_t CWorld::GENERATION_DELAY_LOOPS = 10000;
 float CWorld::MUTATION_RATE = 0.02f;
 
-CWorld::CWorld(uint16_t _width, uint16_t _height, uint16_t _start_pop, uint16_t start_food, bool graphics) {
+CWorld::CWorld(uint16_t _width, uint16_t _height, uint16_t _start_pop, uint16_t start_food) {
   width = _width;
   height = _height;
   start_pop = _start_pop;
-  has_graphics = graphics;
 
   food_tree = new CQTree(0, 8, width, height, 0, 0);
   resetGenerationDelay();
@@ -27,21 +26,10 @@ CWorld::CWorld(uint16_t _width, uint16_t _height, uint16_t _start_pop, uint16_t 
   }
 
   advanceGeneration(1);
-
-  if(has_graphics) {
-    if (!arial_font.loadFromFile("./arial.ttf")) {
-      std::cout << "Arial font failed to load!\n";
-    }
-
-    generation_text.setFont(arial_font);
-    generation_text.setPosition(0, 0);
-    generation_text.setCharacterSize(16);
-    generation_text.setColor(sf::Color::Green);
-  }
 }
 
 void CWorld::spawnFood() {
-  sf::Vector2f position = getRandomPosition();
+  CVector2 position = getRandomPosition();
   uint16_t x = (uint16_t)position.x;
   uint16_t y = (uint16_t)position.y;
 
@@ -182,8 +170,8 @@ CAnt* CWorld::spawnOffspring(CAnt* parent_a, CAnt* parent_b, uint16_t gen) {
   return offspring;
 }
 
-sf::Vector2f CWorld::getRandomPosition() {
-  sf::Vector2f pos;
+CVector2 CWorld::getRandomPosition() {
+  CVector2 pos;
 
   pos.x = ((float)rand() / RAND_MAX) * width;
   pos.y = ((float)rand() / RAND_MAX) * height;
@@ -191,7 +179,7 @@ sf::Vector2f CWorld::getRandomPosition() {
   return pos;
 }
 
-CFood* CWorld::getNearestFood(sf::Vector2f origin) {
+CFood* CWorld::getNearestFood(CVector2 origin) {
   return (CFood *)food_tree->findNearest((uint16_t) origin.x, (uint16_t) origin.y);
 }
 
@@ -201,10 +189,6 @@ void CWorld::consumeFood(CFood* food_item) {
   food_tree->removeObject(food_item, (uint16_t) position.x, (uint16_t) position.y);
 
   spawnFood();
-}
-
-sf::Font* CWorld::getFont() {
-  return &arial_font;
 }
 
 void CWorld::getFitnessRange(uint16_t* range) {
@@ -280,26 +264,27 @@ void CWorld::resetGenerationDelay() {
 
 void CWorld::wrapScreenEdges() {
   for (uint16_t i = 0; i < ants.size(); i++) {
-    sf::Shape* body = ants[i]->getBody();
+    CAnt* ant = ants[i];
 
-    while (body->getPosition().x > width) {
-      body->move((int)width * -1, 0);
+    while (ant->getPosition().x > width) {
+      ant->move((int)width * -1, 0);
     }
 
-    while (body->getPosition().x < 0) {
-      body->move(width, 0);
+    while (ant->getPosition().x < 0) {
+      ant->move(width, 0);
     }
 
-    while (body->getPosition().y > height) {
-      body->move(0, (int)height * -1);
+    while (ant->getPosition().y > height) {
+      ant->move(0, (int)height * -1);
     }
 
-    while (body->getPosition().y < 0) {
-      body->move(0, height);
+    while (ant->getPosition().y < 0) {
+      ant->move(0, height);
     }
   }
 }
 
+/*
 void CWorld::draw(sf::RenderWindow* window) {
   if(!has_graphics) {
     return;
@@ -317,7 +302,7 @@ void CWorld::draw(sf::RenderWindow* window) {
   ss << "Generation: " << generation;
   generation_text.setString(ss.str());
   window->draw(generation_text);
-}
+}*/
 
 uint16_t CWorld::getWidth() {
   return width;
