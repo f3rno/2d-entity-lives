@@ -39,6 +39,7 @@ private:
   uint16_t width, height;
   int fatigue_countdown;
   uint16_t start_pop;
+  uint16_t last_ant_n;
 
   uint16_t next_generation_delay;
   uint16_t generation;

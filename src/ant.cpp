@@ -10,12 +10,13 @@
 
 #define PI 3.1415926f
 
-CAnt::CAnt(CWorld* world, CVector2 start_pos, uint16_t _generation) :
+CAnt::CAnt(CWorld* world, CVector2 start_pos, uint16_t _generation, uint16_t _id) :
 CEntity(world, start_pos) {
 
   generation = _generation;
   target_food = NULL;
   fitness = 0;
+  id = _id;
 
   /*body->setFillColor(sf::Color(230, 126, 34));
   body->setOrigin(2.5, 2.5);
@@ -94,8 +95,11 @@ void CAnt::getGenome(SNeuralNetworkData* output) {
   nn_network_save(brain, output);
 }
 
-void CAnt::insertGenome(SNeuralNetworkData* input) {
+void CAnt::insertGenome(SNeuralNetworkData* input, uint16_t _parent_1_id, uint16_t _parent_2_id) {
   nn_network_load(brain, input);
+
+  parent_1_id = _parent_1_id;
+  parent_2_id = _parent_2_id;
 }
 
 /*
@@ -121,6 +125,18 @@ void CAnt::draw(sf::RenderWindow* window) {
   status_str.setPosition(sf::Vector2f(body_position.x - 16.0f, body_position.y - 16.0f));
   window->draw(status_str);
 }*/
+
+uint16_t CAnt::getID() {
+  return id;
+}
+
+uint16_t CAnt::getParent1ID() {
+  return parent_1_id;
+}
+
+uint16_t CAnt::getParent2ID() {
+  return parent_2_id;
+}
 
 CAnt::~CAnt() {
   nn_network_delete(brain);

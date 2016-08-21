@@ -17,6 +17,7 @@ CWorld::CWorld(uint16_t _width, uint16_t _height, uint16_t _start_pop, uint16_t 
   width = _width;
   height = _height;
   start_pop = _start_pop;
+  last_ant_n = 0;
 
   food_tree = new CQTree(0, 8, width, height, 0, 0);
   resetGenerationDelay();
@@ -44,7 +45,8 @@ void CWorld::advanceGeneration(uint16_t gen) {
   // First generation is entirely random
   if (gen == 1) {
     for (uint16_t i = 0; i < start_pop; i++) {
-      ants.push_back(new CAnt(this, getRandomPosition(), gen));
+      ants.push_back(new CAnt(this, getRandomPosition(), gen, last_ant_n));
+      last_ant_n++;
     }
   } else {
 
@@ -159,8 +161,10 @@ CAnt* CWorld::spawnOffspring(CAnt* parent_a, CAnt* parent_b, uint16_t gen) {
   }
 
   // Birth!
-  CAnt* offspring = new CAnt(this, getRandomPosition(), gen);
-  offspring->insertGenome(child_genome);
+  CAnt* offspring = new CAnt(this, getRandomPosition(), gen, last_ant_n);
+  last_ant_n++;
+
+  offspring->insertGenome(child_genome, parent_a->getID(), parent_b->getID());
 
   nn_network_delete_data(child_genome);
   nn_network_delete_data(parent_a_genome);
