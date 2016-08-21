@@ -74,7 +74,6 @@ void CWorld::advanceGeneration(uint16_t gen) {
     }
 
     float fitnessCutoff = (1.0f - (minFitness / maxFitness)) * 0.9f;
-    float fitnessCutoffReduction = 0.9f;
     uint16_t loopCount = 0; // We decrease the cutoff as we run out of options
 
     while (new_generation.size() < prev_gen_size) {

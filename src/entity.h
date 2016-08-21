@@ -9,7 +9,7 @@ class CEntity {
 public:
   CEntity(CWorld* _world, CVector2 start_pos);
 
-  virtual void step();
+  void step();
 
   CVector2 getPosition();
   void move(float x, float y);

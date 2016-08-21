@@ -21,3 +21,4 @@ void CEntity::move(float x, float y) {
 void CEntity::rotate(float a) {
   rotation += a;
 }
+
