@@ -6,9 +6,9 @@
 #include <sstream>
 #include "qtree/qtree.h"
 #include "qtree/qtree_item.h"
+#include "ant.h"
 
 struct SNeuralNetworkData;
-class CAnt;
 class CVector2;
 class CWorld {
 
@@ -22,16 +22,16 @@ public:
 
   void step();
   void consumeFood(SQTreeItem* food_item);
-  void requestOffspring(CAnt* ant);
+  void requestOffspring(SAnt* ant);
 
   uint16_t getWidth();
   uint16_t getHeight();
 
   uint16_t getGenerationFitness();
   CVector2 getRandomPosition();
-  SQTreeItem* getNearestFood(CVector2 origin);
+  SQTreeItem* getNearestFood(uint16_t x, uint16_t y);
 
-  std::vector<CAnt *> ants;
+  std::vector<SAnt *> ants;
   std::vector<SQTreeItem* > food;
   SQTree* food_tree; // Doesn't take ownership of food objects
 
@@ -43,11 +43,11 @@ private:
   uint16_t next_generation_delay;
   uint16_t generation;
 
-  CAnt* spawnOffspring(CAnt* parent_a, CAnt* parent_b, uint16_t gen);
+  SAnt* spawnOffspring(SAnt* parent_a, SAnt* parent_b, uint16_t gen);
   void resetGenerationDelay();
   void wrapScreenEdges();
-  void grimReaper(CAnt* ant);
-  void runGrimReaper(std::vector<CAnt *> targets);
+  void grimReaper(SAnt* ant);
+  void runGrimReaper(std::vector<SAnt *> targets);
   void advanceGeneration(uint16_t gen);
   void getFitnessRange(uint16_t* range);
   void simulateAnts();

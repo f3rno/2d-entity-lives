@@ -44,19 +44,23 @@ void CWorld::advanceGeneration(uint16_t gen) {
   // First generation is entirely random
   if (gen == 1) {
     for (uint16_t i = 0; i < start_pop; i++) {
-      ants.push_back(new CAnt(this, getRandomPosition(), gen, last_ant_n));
+      CVector2 position = getRandomPosition();
+
+      SAnt* ant = ant_create(position.x, position.y, 0, gen, last_ant_n);
+      ants.push_back(ant);
+
       last_ant_n++;
     }
   } else {
 
     // Note that we randomly select couples!
-    CAnt* parents[2];
+    SAnt* parents[2];
     parents[0] = NULL;
     parents[1] = NULL;
 
     // Generate a new population of the same size
     uint16_t prev_gen_size = ants.size();
-    std::vector<CAnt* > new_generation;
+    std::vector<SAnt* > new_generation;
 
     float totalFitness = 0;
     float minFitness = 0; // We don't pay attention to mentally challenged ants
@@ -87,7 +91,7 @@ void CWorld::advanceGeneration(uint16_t gen) {
           } else if (parents[0] != ants[i] && parents[1] == NULL) {
             parents[1] = ants[i];
 
-            CAnt* child = spawnOffspring(parents[0], parents[1], gen);
+            SAnt* child = spawnOffspring(parents[0], parents[1], gen);
             new_generation.push_back(child);
 
             parents[0] = NULL;
@@ -125,17 +129,17 @@ uint16_t CWorld::getGenerationFitness() {
   return total;
 }
 
-CAnt* CWorld::spawnOffspring(CAnt* parent_a, CAnt* parent_b, uint16_t gen) {
+SAnt* CWorld::spawnOffspring(SAnt* parent_a, SAnt* parent_b, uint16_t gen) {
 
   SNeuralNetworkData* child_genome = new SNeuralNetworkData;
   SNeuralNetworkData* parent_a_genome = new SNeuralNetworkData;
   SNeuralNetworkData* parent_b_genome = new SNeuralNetworkData;
 
-  parent_a->getGenome(parent_a_genome);
-  parent_b->getGenome(parent_b_genome);
+  nn_network_save(parent_a->brain, parent_a_genome);
+  nn_network_save(parent_b->brain, parent_b_genome);
 
   // For simplicity, use a parent genome as scaffolding
-  parent_a->getGenome(child_genome);
+  nn_network_save(parent_a->brain, child_genome);
 
   // Not that we start in a random crossover configuration
   uint16_t genome_size = nn_network_size(parent_a_genome);
@@ -160,10 +164,11 @@ CAnt* CWorld::spawnOffspring(CAnt* parent_a, CAnt* parent_b, uint16_t gen) {
   }
 
   // Birth!
-  CAnt* offspring = new CAnt(this, getRandomPosition(), gen, last_ant_n);
+  CVector2 position = getRandomPosition();
+  SAnt* offspring = ant_create(position.x, position.y, 0, gen, last_ant_n);
   last_ant_n++;
 
-  offspring->insertGenome(child_genome, parent_a->getID(), parent_b->getID());
+  ant_insert_genome(offspring, child_genome, parent_a->id, parent_b->id);
 
   nn_network_delete_data(child_genome);
   nn_network_delete_data(parent_a_genome);
@@ -181,8 +186,8 @@ CVector2 CWorld::getRandomPosition() {
   return pos;
 }
 
-SQTreeItem* CWorld::getNearestFood(CVector2 origin) {
-  return sqtree_find_nearest(food_tree, (uint16_t)origin.x, (uint16_t)origin.y);
+SQTreeItem* CWorld::getNearestFood(uint16_t x, uint16_t y) {
+  return sqtree_find_nearest(food_tree, x, y);
 }
 
 void CWorld::consumeFood(SQTreeItem* food) {
@@ -215,7 +220,7 @@ void CWorld::step() {
 
 void stepAntRange(CWorld* world, uint16_t start, uint16_t end) {
   for (uint16_t i = start; i < end; i++) {
-    world->ants[i]->step();
+    ant_step(world->ants[i], world);
   }
 }
 
@@ -224,13 +229,13 @@ void CWorld::simulateAnts() {
   stepAntRange(this, 0, ants.size());
 }
 
-void CWorld::runGrimReaper(std::vector<CAnt *> targets) {
+void CWorld::runGrimReaper(std::vector<SAnt *> targets) {
   for (uint16_t i = 0; i < targets.size(); i++) {
     grimReaper(targets[i]);
   }
 }
 
-void CWorld::grimReaper(CAnt* ant) {
+void CWorld::grimReaper(SAnt* ant) {
   ants.erase(std::remove(ants.begin(), ants.end(), ant), ants.end());
   delete ant;
 }
@@ -264,22 +269,22 @@ void CWorld::resetGenerationDelay() {
 
 void CWorld::wrapScreenEdges() {
   for (uint16_t i = 0; i < ants.size(); i++) {
-    CAnt* ant = ants[i];
+    SAnt* ant = ants[i];
 
-    while (ant->getPosition().x > width) {
-      ant->move((int)width * -1, 0);
+    while (ant->x > width) {
+      ant->x -= width;
     }
 
-    while (ant->getPosition().x < 0) {
-      ant->move(width, 0);
+    while (ant->x < 0) {
+      ant->x += width;
     }
 
-    while (ant->getPosition().y > height) {
-      ant->move(0, (int)height * -1);
+    while (ant->y > height) {
+      ant->y -= height;
     }
 
-    while (ant->getPosition().y < 0) {
-      ant->move(0, height);
+    while (ant->y < 0) {
+      ant->y += height;
     }
   }
 }
@@ -314,7 +319,7 @@ uint16_t CWorld::getHeight() {
 
 CWorld::~CWorld() {
   for (uint16_t i = 0; i < ants.size(); i++) {
-    delete ants[i];
+    ant_delete(ants[i]);
   }
 
   food.clear();

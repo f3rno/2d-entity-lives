@@ -10,12 +10,15 @@
 
 #define PI 3.1415926f
 
-CAnt::CAnt(CWorld* world, CVector2 start_pos, uint16_t _generation, uint16_t _id) :
-CEntity(world, start_pos) {
+SAnt* ant_create(uint16_t x, uint16_t y, float angle, uint16_t gen, uint16_t id) {
+  SAnt* ant = (SAnt*)malloc(sizeof(SAnt));
+  ant->x = x;
+  ant->y = y;
+  ant->rotation = angle;
+  ant->generation = gen;
+  ant->id = id;
 
-  generation = _generation;
-  fitness = 0;
-  id = _id;
+  ant->fitness = 0;
 
   /*body->setFillColor(sf::Color(230, 126, 34));
   body->setOrigin(2.5, 2.5);
@@ -24,8 +27,8 @@ CEntity(world, start_pos) {
   status_str.setColor(sf::Color::Green);
   status_str.setCharacterSize(11);*/
 
-  uint16_t* brain_layer_sizes = new uint16_t[3];
-  uint16_t* brain_layer_inputs = new uint16_t[3];
+  uint16_t* brain_layer_sizes = (uint16_t*)malloc(sizeof(uint16_t) * 3);
+  uint16_t* brain_layer_inputs = (uint16_t*)malloc(sizeof(uint16_t) * 3);
 
   brain_layer_sizes[0] = 4;
   brain_layer_inputs[0] = 4; // 4 inputs (fx, fy, x, y)
@@ -36,68 +39,68 @@ CEntity(world, start_pos) {
   brain_layer_sizes[2] = 2; // 2 outputs, rotation and impulse
   brain_layer_inputs[2] = 6;
 
-  brain = nn_network_create(3, brain_layer_sizes, brain_layer_inputs);
-  brain_outputs = new double[2];
-  brain_inputs = new double[4];
+  ant->brain = nn_network_create(3, brain_layer_sizes, brain_layer_inputs);
+  ant->brain_outputs = (double*)malloc(sizeof(double) * 2);
+  ant->brain_inputs = (double*)malloc(sizeof(double) * 4);
 
-  delete[] brain_layer_sizes;
-  delete[] brain_layer_inputs;
+  free(brain_layer_sizes);
+  free(brain_layer_inputs);
+
+  return ant;
 }
 
-uint16_t CAnt::getGeneration() {
-  return generation;
-}
-
-// Give the ant a chance to update its state
-void CAnt::step() {
-  SQTreeItem* target_food = world->getNearestFood(position);
+// Update an ant's state for one tick
+void ant_step(SAnt* ant, CWorld* world) {
+  SQTreeItem* target_food = world->getNearestFood(ant->x, ant->y);
 
   // Only act if there is food in the world, otherwise we die anyway
   if (target_food != NULL) {
 
     // Calculate food vector
+    CVector2 position(ant->x, ant->y);
     CVector2 foodV(position, CVector2(target_food->x, target_food->y));
 
     // If food is close enough, consume it
     if (foodV.length() <= 3.5f) {
 
-      fitness += 1;
+      ant->fitness += 1;
       world->consumeFood(target_food);
 
     } else {
       foodV.normalise();
 
-      float angle = rotation;
+      float angle = ant->rotation;
       float angle_r = angle * (PI / 180.0f);
       float look_x = -1.0f * sin(angle_r);
       float look_y = cos(angle_r);
 
-      brain_inputs[0] = foodV.x;
-      brain_inputs[1] = foodV.y;
-      brain_inputs[2] = look_x;
-      brain_inputs[3] = look_y;
+      ant->brain_inputs[0] = foodV.x;
+      ant->brain_inputs[1] = foodV.y;
+      ant->brain_inputs[2] = look_x;
+      ant->brain_inputs[3] = look_y;
 
-      nn_network_process(brain, brain_inputs, brain_outputs);
+      nn_network_process(ant->brain, ant->brain_inputs, ant->brain_outputs);
 
-      // Give ants a way to 
-      brain_outputs[0] = (brain_outputs[0] - 0.5f);
-      brain_outputs[1] = (brain_outputs[1] - 0.5f) * 4.0f;
+      ant->brain_outputs[0] = (ant->brain_outputs[0] - 0.5f);
+      ant->brain_outputs[1] = (ant->brain_outputs[1] - 0.5f) * 4.0f;
 
-      rotate(brain_outputs[0] * (180.0f / PI));
-      move(brain_outputs[1] * look_x, brain_outputs[1] * look_y);
+      ant->rotation += ant->brain_outputs[0] * (180.0f / PI);
+      ant->x += ant->brain_outputs[1] * look_x;
+      ant->y += ant->brain_outputs[1] * look_y;
     }
   }
 }
 
+/*
 void CAnt::getGenome(SNeuralNetworkData* output) {
   nn_network_save(brain, output);
-}
+}*/
 
-void CAnt::insertGenome(SNeuralNetworkData* input, uint16_t _parent_1_id, uint16_t _parent_2_id) {
-  nn_network_load(brain, input);
+void ant_insert_genome(SAnt* ant, SNeuralNetworkData* input, uint16_t parent_1_id, uint16_t parent_2_id) {
+  nn_network_load(ant->brain, input);
 
-  parent_1_id = _parent_1_id;
-  parent_2_id = _parent_2_id;
+  ant->parent_1_id = parent_1_id;
+  ant->parent_2_id = parent_2_id;
 }
 
 /*
@@ -124,21 +127,10 @@ void CAnt::draw(sf::RenderWindow* window) {
   window->draw(status_str);
 }*/
 
-uint16_t CAnt::getID() {
-  return id;
-}
+void ant_delete(SAnt* ant) {
+  nn_network_delete(ant->brain);
 
-uint16_t CAnt::getParent1ID() {
-  return parent_1_id;
-}
-
-uint16_t CAnt::getParent2ID() {
-  return parent_2_id;
-}
-
-CAnt::~CAnt() {
-  nn_network_delete(brain);
-
-  delete[] brain_outputs;
-  delete[] brain_inputs;
+  free(ant->brain_outputs);
+  free(ant->brain_inputs);
+  free(ant);
 }
