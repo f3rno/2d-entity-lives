@@ -2,14 +2,13 @@
 #define ANT_H
 
 #include <stdint.h>
-#include "entity.h"
 #include <vector>
 #include <sstream>
+#include "entity.h"
 
 struct SNeuralNetwork;
 struct SNeuralNetworkData;
 class CWorld;
-class CFood;
 class CVector2;
 
 class CAnt : public CEntity {
@@ -30,7 +29,6 @@ public:
   uint16_t getParent2ID();
 
 private:
-  CFood* target_food;
   SNeuralNetwork* brain;
 
   double* brain_outputs;

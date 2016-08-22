@@ -4,12 +4,12 @@
 #include <stdint.h>
 #include <vector>
 #include <sstream>
+#include "qtree/qtree.h"
+#include "qtree/qtree_item.h"
 
 struct SNeuralNetworkData;
-class CFood;
 class CAnt;
 class CVector2;
-class CQTree;
 class CWorld {
 
 public:
@@ -21,7 +21,7 @@ public:
   ~CWorld();
 
   void step();
-  void consumeFood(CFood* food_item);
+  void consumeFood(SQTreeItem* food_item);
   void requestOffspring(CAnt* ant);
 
   uint16_t getWidth();
@@ -29,11 +29,11 @@ public:
 
   uint16_t getGenerationFitness();
   CVector2 getRandomPosition();
-  CFood* getNearestFood(CVector2 origin);
+  SQTreeItem* getNearestFood(CVector2 origin);
 
   std::vector<CAnt *> ants;
-  std::vector<CFood* > food;
-  CQTree* food_tree; // Doesn't take ownership of food objects
+  std::vector<SQTreeItem* > food;
+  SQTree* food_tree; // Doesn't take ownership of food objects
 
 private:
   uint16_t width, height;

@@ -1,5 +1,4 @@
 #include "world.h"
-#include "food.h"
 #include "ant.h"
 #include "neural/neural_network.h"
 #include "neural/utility.h"
@@ -19,7 +18,7 @@ CWorld::CWorld(uint16_t _width, uint16_t _height, uint16_t _start_pop, uint16_t 
   start_pop = _start_pop;
   last_ant_n = 0;
 
-  food_tree = new CQTree(0, 8, width, height, 0, 0);
+  food_tree = sqtree_create(0, 8, width, height, 0, 0);
   resetGenerationDelay();
 
   for (uint16_t i = 0; i < start_food; i++) {
@@ -34,8 +33,8 @@ void CWorld::spawnFood() {
   uint16_t x = (uint16_t)position.x;
   uint16_t y = (uint16_t)position.y;
 
-  CFood* new_food = new CFood(this, position);
-  food_tree->insertObject(new_food, x, y);
+  SQTreeItem* new_food = sqtree_item_create(NULL, x, y);
+  sqtree_insert(food_tree, new_food);
   food.push_back(new_food);
 }
 
@@ -93,7 +92,7 @@ void CWorld::advanceGeneration(uint16_t gen) {
 
             parents[0] = NULL;
             parents[1] = NULL;
-            
+
             if (new_generation.size() == prev_gen_size) {
               break;
             }
@@ -182,14 +181,13 @@ CVector2 CWorld::getRandomPosition() {
   return pos;
 }
 
-CFood* CWorld::getNearestFood(CVector2 origin) {
-  return (CFood *)food_tree->findNearest((uint16_t) origin.x, (uint16_t) origin.y);
+SQTreeItem* CWorld::getNearestFood(CVector2 origin) {
+  return sqtree_find_nearest(food_tree, (uint16_t)origin.x, (uint16_t)origin.y);
 }
 
-void CWorld::consumeFood(CFood* food_item) {
-
-  CVector2 position = food_item->getPosition();
-  food_tree->removeObject(food_item, (uint16_t) position.x, (uint16_t) position.y);
+void CWorld::consumeFood(SQTreeItem* food) {
+  sqtree_remove(food_tree, food);
+  sqtree_item_delete(food);
 
   spawnFood();
 }
@@ -221,7 +219,6 @@ void stepAntRange(CWorld* world, uint16_t start, uint16_t end) {
   }
 }
 
-// Splits simulation up among multiple threads
 void CWorld::simulateAnts() {
   // TODO: Add threads
   stepAntRange(this, 0, ants.size());
@@ -243,7 +240,7 @@ void CWorld::manageGeneration() {
 
   if (next_generation_delay == 0) {
     bool fit_ants_exist = false;
-    
+
     // Prevent new generation before ants eat
     for (uint16_t i = 0; i < ants.size(); i++) {
       if (ants[i]->fitness > 0) {
@@ -316,10 +313,6 @@ uint16_t CWorld::getHeight() {
 }
 
 CWorld::~CWorld() {
-  for (uint16_t i = 0; i < food.size(); i++) {
-    delete food[i];
-  }
-
   for (uint16_t i = 0; i < ants.size(); i++) {
     delete ants[i];
   }
@@ -327,5 +320,5 @@ CWorld::~CWorld() {
   food.clear();
   ants.clear();
 
-  delete food_tree;
+  sqtree_delete(food_tree);
 }

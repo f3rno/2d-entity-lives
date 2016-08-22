@@ -4,199 +4,261 @@
 #include <cmath>
 #include <iostream>
 
-CQTree::CQTree(uint16_t _depth, uint8_t _limit, uint16_t _width, uint16_t _height, uint16_t _x, uint16_t _y) {
+SQTree* sqtree_create(
+  uint16_t depth,
+  uint8_t limit,
+  uint16_t width,
+  uint16_t height,
+  uint16_t x,
+  uint16_t y
+) {
+  SQTree* tree = (SQTree*)malloc(sizeof(SQTree));
+  tree->depth = depth;
+  tree->limit = limit;
+  tree->width = width;
+  tree->height = height;
+  tree->hwidth = width / 2;
+  tree->hheight = height / 2;
+  tree->x = x;
+  tree->y = y;
 
-  depth = _depth;
-  limit = _limit;
-  width = _width;
-  height = _height;
-  hwidth = width / 2;
-  hheight = height / 2;
-  x = _x;
-  y = _y;
-  subdivided = false;
+  tree->subdivided = false;
+  tree->item_count = 0;
+  tree->cells = NULL;
+  tree->items = (SQTreeItem**)calloc(limit, sizeof(SQTreeItem*));
 
-  items = new CEntity*[limit];
-  item_count = 0;
+  return tree;
 }
 
-void CQTree::insertObject(CEntity* object, uint16_t o_x, uint16_t o_y) {
+// Frees all associated tree items as well
+void sqtree_delete(SQTree* tree) {
+  if(tree->items != NULL) {
+    for(uint16_t i = 0; i < tree->limit; i++) {
+      if(tree->items[i] != NULL) {
+        sqtree_item_delete(tree->items[i]);
+      }
+    }
 
-  if(item_count == limit && !subdivided) {
-    subdivide();
+    free(tree->items);
+    tree->items = NULL;
+  }
+
+  if(tree->subdivided && tree->cells != NULL) {
+    for(uint8_t i = 0; i < 4; i++) {
+      if(tree->cells[i] != NULL) {
+        sqtree_delete(tree->cells[i]);
+      }
+    }
+
+    free(tree->cells);
+    tree->cells = NULL;
+  }
+
+  free(tree);
+  tree = NULL;
+}
+
+void sqtree_insert(SQTree* tree, SQTreeItem* item) {
+  if(tree->item_count == tree->limit && !tree->subdivided) {
+    sqtree_subdivide(tree);
   }
 
   // Insert object into the next free slot
-  if(item_count < limit) {
-    items[item_count] = object;
-  } else {
-    insertObjectIntoSubCells(object, o_x, o_y);
-  }
-
-  item_count++;
-}
-
-void CQTree::subdivide() {
-  if(subdivided) {
-    return;
-  }
-
-  cells = new CQTree*[4];
-  cells[0] = new CQTree(depth + 1, limit, hwidth, hheight, x, y);
-  cells[1] = new CQTree(depth + 1, limit, hwidth, hheight, x, y + hheight);
-  cells[2] = new CQTree(depth + 1, limit, hwidth, hheight, x + hwidth, y);
-  cells[3] = new CQTree(depth + 1, limit, hwidth, hheight, x + hwidth, y + hheight);
-
-  CVector2 position;
-
-  // Move our own items down. We should only be called if our item_count is at
-  // our limit! We don't check for performance reasons.
-  for(int i = 0; i < item_count; i++) {
-    position = items[i]->getPosition();
-    insertObjectIntoSubCells(items[i], (uint16_t) position.x, (uint16_t) position.y);
-
-    items[i] = 0;
-  }
-
-  subdivided = true;
-}
-
-void CQTree::insertObjectIntoSubCells(CEntity* object, uint16_t o_x, uint16_t o_y) {
-  if(o_x < x + hwidth) {
-    if(o_y < y + hheight) {
-      cells[0]->insertObject(object, o_x, o_y);
-    } else {
-      cells[1]->insertObject(object, o_x, o_y);
-    }
-  } else {
-    if(o_y < y + hheight) {
-      cells[2]->insertObject(object, o_x, o_y);
-    } else {
-      cells[3]->insertObject(object, o_x, o_y);
-    }
-  }
-}
-
-void CQTree::removeObject(CEntity* object, uint16_t o_x, uint16_t o_y) {
-
-  if(subdivided) {
-    if(o_x < x + hwidth) {
-      if(o_y < y + hheight) {
-        cells[0]->removeObject(object, o_x, o_y);
-      } else {
-        cells[1]->removeObject(object, o_x, o_y);
-      }
-    } else {
-      if(o_y < y + hheight) {
-        cells[2]->removeObject(object, o_x, o_y);
-      } else {
-        cells[3]->removeObject(object, o_x, o_y);
-      }
-    }
-
-  // Search within our own container
-  } else {
-
-    for(int i = 0; i < item_count; i++) {
-      if(items[i] == object) {
-
-        // If we have multiple objects, we overwrite the object pointer with the
-        // last object in our list.
-        if(item_count == 0) {
-          items[0] = NULL;
-        } else {
-          items[i] = items[item_count - 1];
-          items[item_count - 1] = NULL;
-        }
-
-        item_count--;
+  if(tree->item_count < tree->limit) {
+    for(uint16_t i = 0; i < tree->limit; i++) {
+      if(tree->items[i] == NULL) {
+        tree->items[i] = item;
         break;
       }
     }
+  } else {
+    sqtree_insert_into_cells(tree, item);
+  }
 
+  tree->item_count++;
+}
+
+void sqtree_insert_into_cells(SQTree* tree, SQTreeItem* item) {
+  if(item->x < tree->x + tree->hwidth) {
+    if(item->y < tree->y + tree->hheight) {
+      sqtree_insert(tree->cells[0], item);
+    } else {
+      sqtree_insert(tree->cells[1], item);
+    }
+  } else {
+    if(item->y < tree->y + tree->hheight) {
+      sqtree_insert(tree->cells[2], item);
+    } else {
+      sqtree_insert(tree->cells[3], item);
+    }
   }
 }
 
-CEntity* CQTree::findNearest(uint16_t o_x, uint16_t o_y) {
-
-  if(subdivided) {
-
-    CEntity* result = NULL;
-    uint8_t searched;
-
-    if(o_x < x + hwidth) {
-      if(o_y < y + hheight) {
-        searched = 0;
-      } else {
-        searched = 1;
-      }
-    } else {
-      if(o_y < y + hheight) {
-        searched = 2;
-      } else {
-        searched = 3;
-      }
-    }
-
-    result = cells[searched]->findNearest(o_x, o_y);
-
-    // If we still haven't found anything, search remaining cells
-    // This is NOT optimal!
-    if(result == NULL) {
-      for(uint8_t i = 0; i < 4; i++) {
-        if(i == searched) {
-          continue;
-        }
-
-        result = cells[i]->findNearest(o_x, o_y);
-
-        if(result != NULL) {
-          break;
-        }
-      }
-    }
-
-    return result;
-
+// Removes an item from a QTree; falls back on sqtree_remove_from_cells if
+// subdivded. The item is not deleted.
+bool sqtree_remove(SQTree* tree, SQTreeItem* item) {
+  if(tree->item_count == 0) {
+    return false;
+  } else if(tree->subdivided) {
+    return sqtree_remove_from_cells(tree, item);
   } else {
+    for(uint16_t i = 0; i < tree->limit; i++) {
+      if(tree->items[i] != NULL && tree->items[i] == item) {
+        tree->items[i] = NULL;
 
-    if (item_count == 0) {
+        tree->item_count--;
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+// Removes an item from a QTree's sub-cells (subdivided tree)
+bool sqtree_remove_from_cells(SQTree* tree, SQTreeItem* item) {
+  bool removed = false;
+
+  if(tree->item_count == 0) {
+    return false;
+  } else if(item->x < tree->x + tree->hwidth) {
+    if(item->y < tree->y + tree->hheight) {
+      removed = sqtree_remove(tree->cells[0], item);
+    } else {
+      removed = sqtree_remove(tree->cells[1], item);
+    }
+  } else {
+    if(item->y < tree->y + tree->hheight) {
+      removed = sqtree_remove(tree->cells[2], item);
+    } else {
+      removed = sqtree_remove(tree->cells[3], item);
+    }
+  }
+
+  if(removed) {
+    tree->item_count--;
+  }
+
+  return removed;
+}
+
+SQTreeItem* sqtree_find_nearest(SQTree* tree, uint16_t x, uint16_t y) {
+  if(tree->subdivided) {
+    return sqtree_find_nearest_in_cells(tree, x, y);
+  } else {
+    if(tree->item_count == 0) {
       return NULL;
+    }
 
-    // Search within our own container
-    } else if (item_count < limit) {
+    float distance, best_distance = -1;
+    SQTreeItem* nearest = NULL;
+    uint16_t item_x, item_y;
 
-      float best_distance = -1;
-      CEntity* nearest = 0;
+    for(uint16_t i = 0; i < tree->item_count; i++) {
+      if(tree->items[i] != NULL) {
+        item_x = tree->items[i]->x;
+        item_y = tree->items[i]->y;
 
-      for(int i = 0; i < item_count; i++) {
-        CVector2 position = items[i]->getPosition();
-        float distance = sqrtf(powf(position.x - o_x, 2) + powf(position.y - o_y, 2));
+        distance = sqrtf(powf(item_x - x, 2) + powf(item_y - y, 2));
 
         if(best_distance == -1 || distance < best_distance) {
           best_distance = distance;
-          nearest = items[i];
+          nearest = tree->items[i];
         }
       }
-
-      return nearest;
     }
+
+    return nearest;
   }
 
   return NULL;
 }
 
-CQTree::~CQTree() {
+SQTreeItem* sqtree_find_nearest_in_cells(SQTree* tree, uint16_t x, uint16_t y) {
+  uint8_t cell_i;
 
-  delete[] items;
-
-  if(item_count > limit) {
-
-    delete cells[0];
-    delete cells[1];
-    delete cells[2];
-    delete cells[3];
-
-    delete[] cells;
+  if(x < tree->x + tree->hwidth) {
+    if(y < tree->y + tree->hheight) {
+      cell_i = 0;
+    } else {
+      cell_i = 1;
+    }
+  } else {
+    if(y < tree->y + tree->hheight) {
+      cell_i = 2;
+    } else {
+      cell_i = 3;
+    }
   }
+
+  SQTreeItem* result = sqtree_find_nearest(tree->cells[cell_i], x, y);
+
+  // If we still haven't found anything, search remaining cells
+  // This is NOT optimal!
+  if(result == NULL) {
+    for(uint8_t i = 0; i < 4; i++) {
+      if(i == cell_i) {
+        continue;
+      }
+
+      result = sqtree_find_nearest(tree->cells[i], x, y);
+
+      if(result != NULL) {
+        break;
+      }
+    }
+  }
+
+  return result;
 }
+
+void sqtree_subdivide(SQTree* tree) {
+  tree->cells = (SQTree**)malloc(sizeof(SQTree*)*4);
+  tree->cells[0] = sqtree_create(
+    tree->depth + 1,
+    tree->limit,
+    tree->hwidth,
+    tree->hheight,
+    tree->x,
+    tree->y
+  );
+
+  tree->cells[1] = sqtree_create(
+    tree->depth + 1,
+    tree->limit,
+    tree->hwidth,
+    tree->hheight,
+    tree->x,
+    tree->y + tree->hheight
+  );
+
+  tree->cells[2] = sqtree_create(
+    tree->depth + 1,
+    tree->limit,
+    tree->hwidth,
+    tree->hheight,
+    tree->x + tree->hwidth,
+    tree->y
+  );
+
+  tree->cells[3] = sqtree_create(
+    tree->depth + 1,
+    tree->limit,
+    tree->hwidth,
+    tree->hheight,
+    tree->x + tree->hwidth,
+    tree->y + tree->hheight
+  );
+
+  // Move our own items down. We should only be called if our item_count is at
+  // our limit! We don't check for performance reasons.
+  for(uint16_t i = 0; i < tree->limit; i++) {
+    if(tree->items[i] != NULL) {
+      sqtree_insert_into_cells(tree, tree->items[i]);
+      tree->items[i] = NULL;
+    }
+  }
+
+  tree->subdivided = true;
+}
+

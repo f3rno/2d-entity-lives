@@ -4,7 +4,7 @@
 #include <cmath>
 #include "vector2.h"
 #include "world.h"
-#include "food.h"
+#include "qtree/qtree_item.h"
 #include <algorithm>
 #include <iostream>
 
@@ -14,7 +14,6 @@ CAnt::CAnt(CWorld* world, CVector2 start_pos, uint16_t _generation, uint16_t _id
 CEntity(world, start_pos) {
 
   generation = _generation;
-  target_food = NULL;
   fitness = 0;
   id = _id;
 
@@ -51,20 +50,19 @@ uint16_t CAnt::getGeneration() {
 
 // Give the ant a chance to update its state
 void CAnt::step() {
-  target_food = world->getNearestFood(position);
+  SQTreeItem* target_food = world->getNearestFood(position);
 
   // Only act if there is food in the world, otherwise we die anyway
   if (target_food != NULL) {
 
     // Calculate food vector
-    CVector2 foodV(position, target_food->getPosition());
+    CVector2 foodV(position, CVector2(target_food->x, target_food->y));
 
     // If food is close enough, consume it
     if (foodV.length() <= 3.5f) {
 
       fitness += 1;
       world->consumeFood(target_food);
-      target_food = NULL;
 
     } else {
       foodV.normalise();
