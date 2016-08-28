@@ -4,7 +4,7 @@
 #include "neural/utility.h"
 #include "vector2.h"
 #include "qtree/qtree.h"
-#include <random>
+#include "util.h"
 #include <iostream>
 #include <assert.h>
 #include <algorithm>
@@ -29,9 +29,8 @@ CWorld::CWorld(uint16_t _width, uint16_t _height, uint16_t _start_pop, uint16_t 
 }
 
 void CWorld::spawnFood() {
-  CVector2 position = getRandomPosition();
-  uint16_t x = (uint16_t)position.x;
-  uint16_t y = (uint16_t)position.y;
+  uint16_t x = (uint16_t)randi(width);
+  uint16_t y = (uint16_t)randi(height);
 
   SQTreeItem* new_food = sqtree_item_create(NULL, x, y);
   sqtree_insert(food_tree, new_food);
@@ -44,9 +43,10 @@ void CWorld::advanceGeneration(uint16_t gen) {
   // First generation is entirely random
   if (gen == 1) {
     for (uint16_t i = 0; i < start_pop; i++) {
-      CVector2 position = getRandomPosition();
+      uint16_t x = (uint16_t)randi(width);
+      uint16_t y = (uint16_t)randi(height);
 
-      SAnt* ant = ant_create(position.x, position.y, 0, gen, last_ant_n);
+      SAnt* ant = ant_create(x, y, 0, gen, last_ant_n);
       ants.push_back(ant);
 
       last_ant_n++;
@@ -164,8 +164,10 @@ SAnt* CWorld::spawnOffspring(SAnt* parent_a, SAnt* parent_b, uint16_t gen) {
   }
 
   // Birth!
-  CVector2 position = getRandomPosition();
-  SAnt* offspring = ant_create(position.x, position.y, 0, gen, last_ant_n);
+  uint16_t offspring_x = (uint16_t)randi(width);
+  uint16_t offspring_y = (uint16_t)randi(height);
+
+  SAnt* offspring = ant_create(offspring_x, offspring_y, 0, gen, last_ant_n);
   last_ant_n++;
 
   ant_insert_genome(offspring, child_genome, parent_a->id, parent_b->id);
@@ -175,15 +177,6 @@ SAnt* CWorld::spawnOffspring(SAnt* parent_a, SAnt* parent_b, uint16_t gen) {
   nn_network_delete_data(parent_b_genome);
 
   return offspring;
-}
-
-CVector2 CWorld::getRandomPosition() {
-  CVector2 pos;
-
-  pos.x = ((float)rand() / RAND_MAX) * width;
-  pos.y = ((float)rand() / RAND_MAX) * height;
-
-  return pos;
 }
 
 SQTreeItem* CWorld::getNearestFood(uint16_t x, uint16_t y) {

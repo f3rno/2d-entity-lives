@@ -28,7 +28,6 @@ public:
   uint16_t getHeight();
 
   uint16_t getGenerationFitness();
-  CVector2 getRandomPosition();
   SQTreeItem* getNearestFood(uint16_t x, uint16_t y);
 
   std::vector<SAnt *> ants;
