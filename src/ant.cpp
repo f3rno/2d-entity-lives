@@ -5,6 +5,7 @@
 #include "vector2.h"
 #include "world.h"
 #include "qtree/qtree_item.h"
+#include "qtree/qtree.h"
 #include <algorithm>
 #include <iostream>
 
@@ -51,7 +52,7 @@ SAnt* ant_create(uint16_t x, uint16_t y, float angle, uint16_t gen, uint16_t id)
 
 // Update an ant's state for one tick
 void ant_step(SAnt* ant, CWorld* world) {
-  SQTreeItem* target_food = world->getNearestFood(ant->x, ant->y);
+  SQTreeItem* target_food = sqtree_find_nearest(world->food_tree, ant->x, ant->y);
 
   // Only act if there is food in the world, otherwise we die anyway
   if (target_food != NULL) {

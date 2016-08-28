@@ -179,10 +179,6 @@ SAnt* CWorld::spawnOffspring(SAnt* parent_a, SAnt* parent_b, uint16_t gen) {
   return offspring;
 }
 
-SQTreeItem* CWorld::getNearestFood(uint16_t x, uint16_t y) {
-  return sqtree_find_nearest(food_tree, x, y);
-}
-
 void CWorld::consumeFood(SQTreeItem* food) {
   sqtree_remove(food_tree, food);
   sqtree_item_delete(food);
