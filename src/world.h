@@ -2,55 +2,46 @@
 #define WORLD_H
 
 #include <stdint.h>
-#include <vector>
-#include <sstream>
 #include "qtree/qtree.h"
 #include "qtree/qtree_item.h"
-#include "ant.h"
 
-struct SNeuralNetworkData;
-class CVector2;
-class CWorld {
-
-public:
-  static uint16_t GENERATION_DELAY_LOOPS;
-  static float MUTATION_RATE;
-  static float CROSSOVER_RATE;
-
-  CWorld(uint16_t _width, uint16_t _height, uint16_t _start_pop, uint16_t start_food);
-  ~CWorld();
-
-  void step();
-  void consumeFood(SQTreeItem* food_item);
-  void requestOffspring(SAnt* ant);
-
-  uint16_t getWidth();
-  uint16_t getHeight();
-
-  uint16_t getGenerationFitness();
-
-  std::vector<SAnt *> ants;
-  std::vector<SQTreeItem* > food;
-  SQTree* food_tree; // Doesn't take ownership of food objects
-
-private:
+struct SAnt;
+typedef struct SWorld {
   uint16_t width, height;
-  uint16_t start_pop;
-  uint16_t last_ant_n;
+  uint16_t population;
+  uint16_t food_count;
+  uint32_t generation;
 
-  uint16_t next_generation_delay;
-  uint16_t generation;
+  uint16_t last_ant_id;
+  uint32_t steps_to_next_generation;
+  uint32_t generation_steps;
 
-  SAnt* spawnOffspring(SAnt* parent_a, SAnt* parent_b, uint16_t gen);
-  void resetGenerationDelay();
-  void wrapScreenEdges();
-  void grimReaper(SAnt* ant);
-  void runGrimReaper(std::vector<SAnt *> targets);
-  void advanceGeneration(uint16_t gen);
-  void getFitnessRange(uint16_t* range);
-  void simulateAnts();
-  void manageGeneration();
-  void spawnFood();
-};
+  float mutation_rate;
+
+  struct SAnt** ants;
+  SQTreeItem** food;
+  SQTree* food_tree; // Doesn't take ownership of food objects
+} SWorld;
+
+SWorld* world_create(uint16_t w, uint16_t h, uint16_t pop, uint16_t food);
+SQTreeItem* world_create_food();
+
+void world_init(SWorld* world);
+void world_init_food(SWorld* world);
+void world_init_gen(SWorld* world);
+void world_reset_gen_steps(SWorld* world);
+
+float world_calc_fitness_cutoff(SWorld* world);
+
+void world_consume_food(SWorld* world, SQTreeItem* food);
+void world_step(SWorld* world);
+void world_step_ants(SWorld* world);
+void world_step_ant_range(SWorld* world, uint16_t start, uint16_t end);
+void world_wrap_screen_edges(SWorld* world);
+void world_mate(SWorld* world);
+
+void world_purge_food(SWorld* world);
+void world_purge_population(SWorld* world);
+void world_delete(SWorld* world);
 
 #endif

@@ -1,14 +1,15 @@
+#include <stdlib.h>
 #include "neural_layer.h"
 #include "neuron.h"
-#include "utility.h"
+#include "util.h"
 
 // Creates a new neural layer with n_neurons, each with n_inputs
 SNeuralLayer* nn_layer_create(uint16_t n_inputs, uint16_t n_neurons) {
-  SNeuralLayer* layer = new SNeuralLayer;
+  SNeuralLayer* layer = (SNeuralLayer*)malloc(sizeof(SNeuralLayer));
 
   layer->n_inputs = n_inputs;
   layer->n_neurons = n_neurons;
-  layer->neurons = new SNeuron*[n_neurons];
+  layer->neurons = (SNeuron**)malloc(sizeof(SNeuron*) * n_neurons);
 
   for (uint16_t i = 0; i < n_neurons; i++) {
     layer->neurons[i] = nn_neuron_create(n_inputs, 1);
@@ -23,8 +24,8 @@ void nn_layer_delete(SNeuralLayer* layer) {
     nn_neuron_delete(layer->neurons[i]);
   }
 
-  delete[] layer->neurons;
-  delete layer;
+  free(layer->neurons);
+  free(layer);
 }
 
 // Processes inputs and writes outputs to the specified array

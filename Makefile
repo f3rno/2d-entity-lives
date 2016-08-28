@@ -1,8 +1,8 @@
-CC=g++
-CFLAGS=-std=c++11 -c -Wall -I /usr/include -Ofast -ffast-math -march=native -ggdb
-LDFLAGS= -lboost_chrono -lboost_system
-SOURCES=src/main.cpp src/util.c src/qtree/qtree_item.cpp src/qtree/qtree.cpp src/neural/neuron.cpp src/neural/neural_layer.cpp src/neural/neural_network.cpp src/vector2.cpp src/neural/utility.cpp src/ant.cpp src/world.cpp
-OBJECTS=$(SOURCES:.cpp=.o)
+CC=gcc
+CFLAGS= -c -Wall -I /usr/include -Ofast -ffast-math -march=native -ggdb -masm=intel
+LDFLAGS= -lboost_chrono -lboost_system -lm
+SOURCES=src/main.c src/util.c src/vec2.c src/qtree/qtree_item.c src/qtree/qtree.c src/neural/neuron.c src/neural/neural_layer.c src/neural/neural_network.c  src/neural/util.c src/ant.c src/world.c
+OBJECTS=$(SOURCES:.c=.o)
 EXECUTABLE=bin/networks
 
 all: $(SOURCES) $(EXECUTABLE)

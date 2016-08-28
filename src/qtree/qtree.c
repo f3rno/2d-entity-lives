@@ -1,7 +1,6 @@
+#include <stdlib.h>
 #include "qtree.h"
-#include "../vector2.h"
-#include <cmath>
-#include <iostream>
+#include "../vec2.h"
 
 SQTree* sqtree_create(
   uint16_t depth,
@@ -78,14 +77,14 @@ void sqtree_insert(SQTree* tree, SQTreeItem* item) {
 }
 
 void sqtree_insert_into_cells(SQTree* tree, SQTreeItem* item) {
-  if(item->x < tree->x + tree->hwidth) {
-    if(item->y < tree->y + tree->hheight) {
+  if(item->pos[0] < tree->x + tree->hwidth) {
+    if(item->pos[1] < tree->y + tree->hheight) {
       sqtree_insert(tree->cells[0], item);
     } else {
       sqtree_insert(tree->cells[1], item);
     }
   } else {
-    if(item->y < tree->y + tree->hheight) {
+    if(item->pos[1] < tree->y + tree->hheight) {
       sqtree_insert(tree->cells[2], item);
     } else {
       sqtree_insert(tree->cells[3], item);
@@ -120,14 +119,14 @@ bool sqtree_remove_from_cells(SQTree* tree, SQTreeItem* item) {
 
   if(tree->item_count == 0) {
     return false;
-  } else if(item->x < tree->x + tree->hwidth) {
-    if(item->y < tree->y + tree->hheight) {
+  } else if(item->pos[0] < tree->x + tree->hwidth) {
+    if(item->pos[1] < tree->y + tree->hheight) {
       removed = sqtree_remove(tree->cells[0], item);
     } else {
       removed = sqtree_remove(tree->cells[1], item);
     }
   } else {
-    if(item->y < tree->y + tree->hheight) {
+    if(item->pos[1] < tree->y + tree->hheight) {
       removed = sqtree_remove(tree->cells[2], item);
     } else {
       removed = sqtree_remove(tree->cells[3], item);
@@ -141,9 +140,9 @@ bool sqtree_remove_from_cells(SQTree* tree, SQTreeItem* item) {
   return removed;
 }
 
-SQTreeItem* sqtree_find_nearest(SQTree* tree, uint16_t x, uint16_t y) {
+SQTreeItem* sqtree_find_nearest(SQTree* tree, uint16_t* pos) {
   if(tree->subdivided) {
-    return sqtree_find_nearest_in_cells(tree, x, y);
+    return sqtree_find_nearest_in_cells(tree, pos);
   } else {
     if(tree->item_count == 0) {
       return NULL;
@@ -151,14 +150,10 @@ SQTreeItem* sqtree_find_nearest(SQTree* tree, uint16_t x, uint16_t y) {
 
     float distance, best_distance = -1;
     SQTreeItem* nearest = NULL;
-    uint16_t item_x, item_y;
 
     for(uint16_t i = 0; i < tree->item_count; i++) {
       if(tree->items[i] != NULL) {
-        item_x = tree->items[i]->x;
-        item_y = tree->items[i]->y;
-
-        distance = sqrtf(powf(item_x - x, 2) + powf(item_y - y, 2));
+        distance = vec2_distance(pos, tree->items[i]->pos);
 
         if(best_distance == -1 || distance < best_distance) {
           best_distance = distance;
@@ -173,24 +168,24 @@ SQTreeItem* sqtree_find_nearest(SQTree* tree, uint16_t x, uint16_t y) {
   return NULL;
 }
 
-SQTreeItem* sqtree_find_nearest_in_cells(SQTree* tree, uint16_t x, uint16_t y) {
+SQTreeItem* sqtree_find_nearest_in_cells(SQTree* tree, uint16_t* pos) {
   uint8_t cell_i;
 
-  if(x < tree->x + tree->hwidth) {
-    if(y < tree->y + tree->hheight) {
+  if(pos[0] < tree->x + tree->hwidth) {
+    if(pos[1] < tree->y + tree->hheight) {
       cell_i = 0;
     } else {
       cell_i = 1;
     }
   } else {
-    if(y < tree->y + tree->hheight) {
+    if(pos[1] < tree->y + tree->hheight) {
       cell_i = 2;
     } else {
       cell_i = 3;
     }
   }
 
-  SQTreeItem* result = sqtree_find_nearest(tree->cells[cell_i], x, y);
+  SQTreeItem* result = sqtree_find_nearest(tree->cells[cell_i], pos);
 
   // If we still haven't found anything, search remaining cells
   // This is NOT optimal!
@@ -200,7 +195,7 @@ SQTreeItem* sqtree_find_nearest_in_cells(SQTree* tree, uint16_t x, uint16_t y) {
         continue;
       }
 
-      result = sqtree_find_nearest(tree->cells[i], x, y);
+      result = sqtree_find_nearest(tree->cells[i], pos);
 
       if(result != NULL) {
         break;

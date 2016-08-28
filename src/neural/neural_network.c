@@ -1,16 +1,17 @@
+#include <stdlib.h>
+#include <assert.h>
 #include "neural_network.h"
 #include "neural_layer.h"
 #include "neuron.h"
-#include <assert.h>
 
 // Creates a layer with the specified layers and layer sizes
 SNeuralNetwork* nn_network_create(uint16_t n_layers, uint16_t* l_sizes, uint16_t* l_inputs) {
-  SNeuralNetwork* network = new SNeuralNetwork;
+  SNeuralNetwork* network = (SNeuralNetwork*)malloc(sizeof(SNeuralNetwork));
 
   network->n_weights = 0;
   network->n_layers = n_layers;
-  network->layers = new SNeuralLayer*[n_layers];
-  network->output_buffers = new double*[n_layers - 1];
+  network->layers = (SNeuralLayer**)malloc(sizeof(SNeuralLayer*) * n_layers);
+  network->output_buffers = (double**)malloc(sizeof(double*) * (n_layers - 1));
 
   for (uint16_t i = 0; i < n_layers; i++) {
     network->layers[i] = nn_layer_create(l_inputs[i], l_sizes[i]);
@@ -18,16 +19,17 @@ SNeuralNetwork* nn_network_create(uint16_t n_layers, uint16_t* l_sizes, uint16_t
 
     // All but the last layer have buffers
     if (i < n_layers - 1) {
-      network->output_buffers[i] = new double[l_sizes[i]];
+      network->output_buffers[i] = (double*)malloc(sizeof(double) * l_sizes[i]);
     }
   }
 
   return network;
 }
 
-SNeuralNetwork* nn_network_create(SNeuralNetworkData* data) {
+SNeuralNetwork* nn_network_create_from_data(SNeuralNetworkData* data) {
   SNeuralNetwork* network = nn_network_create(data->n_layers, data->l_sizes, data->l_inputs);
   nn_network_load(network, data);
+
   return network;
 }
 
@@ -38,17 +40,16 @@ void nn_network_delete(SNeuralNetwork* network) {
 
     // All but the last layer have buffers
     if (i < network->n_layers - 1) {
-      delete[] network->output_buffers[i];
+      free(network->output_buffers[i]);
     }
   }
 
-  delete[] network->output_buffers;
-  delete[] network->layers;
-  delete network;
+  free(network->output_buffers);
+  free(network->layers);
+  free(network);
 }
 
 void nn_network_process(SNeuralNetwork* network, double* inputs, double* outputs) {
-  
   // If we only have one layer, pass outputs directly
   if (network->n_layers == 1) {
     nn_layer_process(network->layers[0], inputs, outputs);
@@ -83,7 +84,7 @@ uint16_t nn_network_size(SNeuralNetwork* network) {
   return size;
 }
 
-uint16_t nn_network_size(SNeuralNetworkData* data) {
+uint16_t nn_network_size_from_data(SNeuralNetworkData* data) {
   uint16_t size = 0;
 
   for (uint16_t i = 0; i < data->n_layers; i++) {
@@ -95,9 +96,9 @@ uint16_t nn_network_size(SNeuralNetworkData* data) {
 
 void nn_network_save(SNeuralNetwork* network, SNeuralNetworkData* output) {
   output->n_layers = network->n_layers;
-  output->l_inputs = new uint16_t[network->n_layers];
-  output->l_sizes = new uint16_t[network->n_layers];
-  output->data = new double[nn_network_size(network)];
+  output->l_inputs = (uint16_t*)malloc(sizeof(uint16_t) * network->n_layers);
+  output->l_sizes = (uint16_t*)malloc(sizeof(uint16_t) * network->n_layers);
+  output->data = (double*)malloc(sizeof(double) * nn_network_size(network));
 
   uint16_t data_index = 0;
 
@@ -128,18 +129,18 @@ void nn_network_load(SNeuralNetwork* network, SNeuralNetworkData* input) {
 }
 
 void nn_network_delete_data(SNeuralNetworkData* data) {
-  delete[] data->l_inputs;
-  delete[] data->l_sizes;
-  delete data;
+  free(data->l_inputs);
+  free(data->l_sizes);
+  free(data);
 }
 
 SNeuralNetworkData* nn_network_create_data(uint16_t n_layers, uint16_t n_data) {
-  SNeuralNetworkData* data = new SNeuralNetworkData;
+  SNeuralNetworkData* data = (SNeuralNetworkData*)malloc(sizeof(SNeuralNetworkData));
 
   data->n_layers = n_layers;
-  data->l_inputs = new uint16_t[n_layers];
-  data->l_sizes = new uint16_t[n_layers];
-  data->data = new double[n_data];
+  data->l_inputs = (uint16_t*)malloc(sizeof(uint16_t) * n_layers);
+  data->l_sizes = (uint16_t*)malloc(sizeof(uint16_t) * n_layers);
+  data->data = (double*)malloc(sizeof(double) * n_data);
 
   return data;
 }

@@ -1,14 +1,16 @@
+#include <stdlib.h>
+#include <math.h>
 #include "neuron.h"
-#include "utility.h"
-#include <cmath>
+#include "util.h"
+#include "../util.h"
 
 // Creat a neuron with n_inputs
 SNeuron* nn_neuron_create(uint16_t n_inputs, double bias) {
-  SNeuron* neuron = new SNeuron();
+  SNeuron* neuron = (SNeuron*)malloc(sizeof(SNeuron));
 
   neuron->n_weights = n_inputs + 1;
-  neuron->weights = new double[n_inputs + 1];
-  nn_neuron_randomizeWeights(neuron);
+  neuron->weights = (double*)malloc(sizeof(double) * (n_inputs + 1));
+  nn_neuron_randomize_weights(neuron);
   neuron->weights[n_inputs] = bias;
 
   return neuron;
@@ -16,13 +18,13 @@ SNeuron* nn_neuron_create(uint16_t n_inputs, double bias) {
 
 // Delete the neuron and all of its weights
 void nn_neuron_delete(SNeuron* neuron) {
-  delete[] neuron->weights;
-  delete neuron;
+  free(neuron->weights);
+  free(neuron);
 }
 
-void nn_neuron_randomizeWeights(SNeuron* neuron) {
+void nn_neuron_randomize_weights(SNeuron* neuron) {
   for (uint16_t i = 0; i < neuron->n_weights; i++) {
-    neuron->weights[i] = nn_util_genrandom();
+    neuron->weights[i] = randd(1);
   }
 }
 
@@ -33,7 +35,7 @@ double nn_neuron_process(SNeuron* neuron, double* inputs) {
   for (uint16_t i = 0; i < neuron->n_weights - 2; i++) {
     output += neuron->weights[i] * inputs[i];
   }
-  
+
   // Subtract bias seperately at the end
   output -= neuron->weights[neuron->n_weights - 1];
 
