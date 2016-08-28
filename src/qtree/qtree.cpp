@@ -1,6 +1,5 @@
 #include "qtree.h"
 #include "../vector2.h"
-#include "../entity.h"
 #include <cmath>
 #include <iostream>
 
