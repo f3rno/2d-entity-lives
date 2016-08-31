@@ -1,0 +1,8 @@
+## An experiment in neural network rendering.
+
+This started as an idea to create a 4D block of "time" containing 3d life forms.
+It is an attempt to visualise life as a continous process, with each entity
+being part of a larger 4D structure through time, in a physical sense.
+
+For now it is something more simple, renderings of 2D entities over time via a
+simple 3D space.
